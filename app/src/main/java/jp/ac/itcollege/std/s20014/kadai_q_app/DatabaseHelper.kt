@@ -13,7 +13,7 @@ class DatabaseHelper (context:Context) :
 
     override fun onCreate(db: SQLiteDatabase?) {
         val createTable = """
-            CREATE_TABLE quiz (
+            CREATE TABLE quiz (
                 _id INTEGER PRIMARY KEY,
                 question TEXT,
                 answers LONG,

@@ -88,55 +88,61 @@ class MainActivity : AppCompatActivity() {
 
     @UiThread
     private fun getVersionPost(result: String) {
+        var oldVersion = ""
         val newVersion = JSONObject(result).getString("version")
-        binding.versionView.text = newVersion
-        getData(QUIZ_URL + "data")
+        if (oldVersion != newVersion) {
+            oldVersion = newVersion
+            getData(QUIZ_URL + "data")
+        }
     }
 
     @UiThread
     private fun getDataPost(result: String) {
         val rootData = JSONArray(result)
         val num = rootData.length()
-        val id = rootData.getJSONObject(0).getLong("id")
-        val question = rootData.getJSONObject(0).getString("question")
-        val answers = rootData.getJSONObject(0).getLong("answers")
-        val choices = rootData.getJSONObject(0).getJSONArray("choices")
-        val Q1 = choices[0].toString()
-        val Q2 = choices[1].toString()
-        val Q3 = choices[2].toString()
-        val Q4 = choices[3].toString()
-        val Q5 = choices[4].toString()
-        val Q6 = choices[5].toString()
-
         _helper = DatabaseHelper(this)
 
         val db = _helper.writableDatabase
 
         val insert = """
-            INSERT INTO quiz
-            (_id, question, answers, Q1, Q2, Q3, Q4, Q5, Q6)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """.trimIndent()
+                INSERT INTO quiz
+                (_id, question, answers, quiz1, quiz2, quiz3, quiz4, quiz5, quiz6)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """.trimIndent()
 
         val stmt = db.compileStatement(insert)
+        for (i in 0..num - 1) {
+            var id = rootData.getJSONObject(i).getLong("id")
+            var question = rootData.getJSONObject(i).getString("question")
+            var answers = rootData.getJSONObject(i).getLong("answers")
+            var choices = rootData.getJSONObject(i).getJSONArray("choices")
+            var Q1 = choices[0].toString()
+            var Q2 = choices[1].toString()
+            var Q3 = choices[2].toString()
+            var Q4 = choices[3].toString()
+            var Q5 = choices[4].toString()
+            var Q6 = choices[5].toString()
 
-        stmt.run {
-            bindLong(1,id)
-            bindString(2, question)
-            bindLong(3, answers)
-            bindString(4, Q1)
-            bindString(5, Q2)
-            bindString(6, Q3)
-            bindString(7, Q4)
-            bindString(8, Q5)
-            bindString(9, Q6)
 
+
+            stmt.run {
+                bindLong(1, id)
+                bindString(2, question)
+                bindLong(3, answers)
+                bindString(4, Q1)
+                bindString(5, Q2)
+                bindString(6, Q3)
+                bindString(7, Q4)
+                bindString(8, Q5)
+                bindString(9, Q6)
+
+            }
             stmt.executeInsert()
         }
     }
 
     override fun onDestroy() {
-      //  _helper.close()
+        _helper.close()
         super.onDestroy()
     }
 }
