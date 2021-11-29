@@ -19,8 +19,13 @@ class ResultView : AppCompatActivity() {
         val min = time / 1000L / 60
         val sec = time / 1000L % 60000
 
-        binding.scoreView.text = "${score}点"
-        binding.timeView.text = "${min}:${sec}"
+        binding.scoreView.text = "10/${score}点"
+        if (min == 0L) {
+            binding.timeView.text = "${sec}秒"
+        }else {
+            binding.timeView.text = "${min}分${sec}秒"
+        }
+
 
         binding.bakcbutton.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
