@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="jp.ac.itcollege.std.s20014.kadai_q_app">
 
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -12,7 +12,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Kadai_Q_App">
         <activity
-            android:name=".Qizu_View"
+            android:name=".ResultView"
+            android:exported="false" />
+        <activity
+            android:name=".QuizView"
             android:exported="true" />
         <activity
             android:name=".MainActivity"

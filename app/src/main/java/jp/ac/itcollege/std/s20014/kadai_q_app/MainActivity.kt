@@ -24,22 +24,39 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var _helper: DatabaseHelper
-    private val QUIZ_URL = "https://script.google.com/macros/s/AKfycbznWpk2m8q6lbLWSS6qaz3uS6j3L4zPwv7CqDEiC433YOgAdaFekGJmjoAO60quMg6l/exec?f="
+    private lateinit var oldVersion: String
+    companion object{
+        private const val QUIZ_URL = "https://script.google.com/macros/s/AKfycbznWpk2m8q6lbLWSS6qaz3uS6j3L4zPwv7CqDEiC433YOgAdaFekGJmjoAO60quMg6l/exec?f="
+        private const val VERSION = "version"
+        private const val DATA = "data"
+    }
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
+
+        val pref = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this)
+        oldVersion = pref.getString("version", "null").toString()
         setContentView(binding.root)
+
+        binding.startButton.setOnClickListener {
+            val intent = Intent(this, QuizView::class.java)
+            startActivity(intent)
+        }
+
     }
 
     override fun onResume() {
         super.onResume()
-        getVersion(QUIZ_URL + "version")
+        getVersion(QUIZ_URL + VERSION)
+
     }
 
     @UiThread
-    private fun getVersion(url: String) {
+    private fun getVersion(
+        url: String) {
 
         lifecycleScope.launch {
             val result = getJson(url)
@@ -88,12 +105,14 @@ class MainActivity : AppCompatActivity() {
 
     @UiThread
     private fun getVersionPost(result: String) {
-        var oldVersion = ""
         val newVersion = JSONObject(result).getString("version")
         if (oldVersion != newVersion) {
-            oldVersion = newVersion
-            getData(QUIZ_URL + "data")
+            val pref = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this)
+            pref.edit().putString("version", newVersion).apply()
+            getData(QUIZ_URL + DATA)
         }
+
+
     }
 
     @UiThread
@@ -111,17 +130,17 @@ class MainActivity : AppCompatActivity() {
             """.trimIndent()
 
         val stmt = db.compileStatement(insert)
-        for (i in 0..num - 1) {
-            var id = rootData.getJSONObject(i).getLong("id")
-            var question = rootData.getJSONObject(i).getString("question")
-            var answers = rootData.getJSONObject(i).getLong("answers")
-            var choices = rootData.getJSONObject(i).getJSONArray("choices")
-            var Q1 = choices[0].toString()
-            var Q2 = choices[1].toString()
-            var Q3 = choices[2].toString()
-            var Q4 = choices[3].toString()
-            var Q5 = choices[4].toString()
-            var Q6 = choices[5].toString()
+        for (i in 0 until num) {
+            val id = rootData.getJSONObject(i).getLong("id")
+            val question = rootData.getJSONObject(i).getString("question")
+            val answers = rootData.getJSONObject(i).getLong("answers")
+            val choices = rootData.getJSONObject(i).getJSONArray("choices")
+            val q1 = choices[0].toString()
+            val q2 = choices[1].toString()
+            val q3 = choices[2].toString()
+            val q4 = choices[3].toString()
+            val q5 = choices[4].toString()
+            val q6 = choices[5].toString()
 
 
 
@@ -129,20 +148,15 @@ class MainActivity : AppCompatActivity() {
                 bindLong(1, id)
                 bindString(2, question)
                 bindLong(3, answers)
-                bindString(4, Q1)
-                bindString(5, Q2)
-                bindString(6, Q3)
-                bindString(7, Q4)
-                bindString(8, Q5)
-                bindString(9, Q6)
+                bindString(4, q1)
+                bindString(5, q2)
+                bindString(6, q3)
+                bindString(7, q4)
+                bindString(8, q5)
+                bindString(9, q6)
 
             }
             stmt.executeInsert()
         }
-    }
-
-    override fun onDestroy() {
-        _helper.close()
-        super.onDestroy()
     }
 }
