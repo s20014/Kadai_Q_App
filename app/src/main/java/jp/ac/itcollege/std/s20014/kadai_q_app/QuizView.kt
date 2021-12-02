@@ -2,7 +2,6 @@ package jp.ac.itcollege.std.s20014.kadai_q_app
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.database.DatabaseUtils
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -16,25 +15,26 @@ import jp.ac.itcollege.std.s20014.kadai_q_app.databinding.ActivityQizuViewBindin
 
 
 class QuizView : AppCompatActivity() {
-
     private lateinit var binding: ActivityQizuViewBinding
     private lateinit var _helper: DatabaseHelper
-    private var allquizlist = arrayListOf<List<Any>>()
+    private var allQuizList = arrayListOf<List<Any>>()
+    private val idList = arrayListOf<Long>()
 
     private var i = 0
     private var score = 0
-    private var totaltime = 0L
+    private var totalTime = 0L
     private var answer = mutableListOf<Int>()
-    private var useranswer = mutableListOf<Int>()
+    private var userAnswer = mutableListOf<Int>()
 
     private val timer = TimeLeftCountdown(10L * 1000, 100L)
-    private var nowtime = 0L
+    private var nowTime = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityQizuViewBinding.inflate(layoutInflater)
         setContentView(binding.root)
         _helper = DatabaseHelper(this)
+
 
 
 
@@ -52,17 +52,17 @@ class QuizView : AppCompatActivity() {
         }
     }
 
-    fun click(n :Int) {
-        if (n in useranswer) {
-            useranswer.remove(n)
-            toParple(n)
+    private fun click(n :Int) {
+        if (n in userAnswer) {
+            userAnswer.remove(n)
+            toPurple(n)
         } else {
-            useranswer.add(n)
+            userAnswer.add(n)
             toGray(n)
         }
     }
 
-    fun toGray(n: Int) {
+    private fun toGray(n: Int) {
         val color = Color.rgb(200, 200, 200)
         when(n) {
             0 -> binding.q0.setBackgroundColor(color)
@@ -74,7 +74,7 @@ class QuizView : AppCompatActivity() {
         }
     }
 
-    fun toParple(n: Int) {
+    private fun toPurple(n: Int) {
         val color = Color.rgb(0, 0, 255)
         when(n) {
             0 -> binding.q0.setBackgroundColor(color)
@@ -94,12 +94,27 @@ class QuizView : AppCompatActivity() {
             SELECT * FROM quiz 
             WHERE _id = ?
         """.trimIndent()
-        val dbsize = DatabaseUtils.queryNumEntries(db, "quiz").toInt()
-        val randomInt = (1..dbsize).toList().shuffled()
+
+        val ids = """
+            SELECT _id FROM quiz
+        """.trimIndent()
+
+        val arrayId = db.rawQuery(ids, null)
+        if (arrayId.count > 0) {
+            arrayId.moveToFirst()
+            while (!arrayId.isAfterLast) {
+                idList.add(arrayId.getLong(0))
+                arrayId.moveToNext()
+            }
+        }
+        arrayId.close()
+
+        val ram = idList.toList().shuffled()
 
         for (i in 0 until 10) {
-            val randomId = (1000 + randomInt[i]).toString()
+            val randomId = (ram[i]).toString()
             val cursor = db.rawQuery(sql, arrayOf(randomId))
+            println(arrayId)
 
             while (cursor.moveToNext()) {
                 val id = cursor.let {
@@ -139,6 +154,7 @@ class QuizView : AppCompatActivity() {
                     it.getString(index)
                 }
                 val quizList = ArrayList<String>()
+
                 quizList.run {
                     add(quiz1)
                     add(quiz2)
@@ -148,7 +164,7 @@ class QuizView : AppCompatActivity() {
 
                 if (quiz5 != ""){ quizList.add(quiz5) }
                 if (quiz6 != ""){ quizList.add(quiz6) }
-                allquizlist.add(mutableListOf(id, question, answers, quizList))
+                allQuizList.add(mutableListOf(id, question, answers, quizList))
             }
             cursor.close()
         }
@@ -165,11 +181,11 @@ class QuizView : AppCompatActivity() {
 
         override fun onTick(millisUntilFinished: Long) {
             binding.timeLeftBar.progress = (millisUntilFinished / 100).toInt()
-            nowtime = 10000 - millisUntilFinished
+            nowTime = 10000 - millisUntilFinished
         }
 
         override fun onFinish() {
-            nowtime = 10000L
+            nowTime = 10000L
             result()
         }
     }
@@ -178,11 +194,11 @@ class QuizView : AppCompatActivity() {
 
         timer.cancel()
 
-        totaltime += nowtime
+        totalTime += nowTime
 
         binding.okButton.isEnabled = false
         val handler = Handler(Looper.getMainLooper())
-        if (useranswer.sorted() == answer.sorted()) {
+        if (userAnswer.sorted() == answer.sorted()) {
             ++score
             binding.imageView.setImageResource(R.drawable.maru)
             binding.imageView.visibility = View.VISIBLE
@@ -196,26 +212,26 @@ class QuizView : AppCompatActivity() {
         }
     }
 
-    fun print() {
+    private fun print() {
         timer.start()
         binding.okButton.isEnabled = true
 
         for (j in 0 until 6) {
-            toParple(j)
+            toPurple(j)
         }
 
         binding.imageView.visibility = View.GONE
 
-        useranswer = mutableListOf()
+        userAnswer = mutableListOf()
         answer = mutableListOf()
 
-        binding.idView.text = allquizlist[i][0].toString()
-        binding.questionView.text = allquizlist[i][1].toString()
+        binding.idView.text = allQuizList[i][0].toString()
+        binding.questionView.text = allQuizList[i][1].toString()
 
-        val temp = allquizlist[i][3] as List<*>
+        val temp = allQuizList[i][3] as List<*>
         val choices = temp.shuffled()
 
-        for (j in 0 until (allquizlist[i][2] as Int)){
+        for (j in 0 until (allQuizList[i][2] as Int)){
             answer.add(choices.indexOf(temp[j]))
         }
 
@@ -244,13 +260,13 @@ class QuizView : AppCompatActivity() {
         }
     }
 
-    fun moveToNext() {
+    private fun moveToNext() {
         i++
-        if (i >= 1) {
+        if (i >= 10) {
             val intent = Intent(this, ResultView::class.java)
             intent.apply {
                 putExtra("score", score)
-                putExtra("time", totaltime)
+                putExtra("time", totalTime)
             }
             startActivity(intent)
         } else {

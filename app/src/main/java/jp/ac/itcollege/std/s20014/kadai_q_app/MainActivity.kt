@@ -39,12 +39,15 @@ class MainActivity : AppCompatActivity() {
 
         val pref = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this)
         oldVersion = pref.getString("version", "null").toString()
-        setContentView(binding.root)
 
+        setContentView(binding.root)
         binding.startButton.setOnClickListener {
-            val intent = Intent(this, QuizView::class.java)
-            startActivity(intent)
+            next()
         }
+
+
+
+
 
     }
 
@@ -52,11 +55,11 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         getVersion(QUIZ_URL + VERSION)
 
+
     }
 
     @UiThread
-    private fun getVersion(
-        url: String) {
+    private fun getVersion(url: String) {
 
         lifecycleScope.launch {
             val result = getJson(url)
@@ -76,8 +79,7 @@ class MainActivity : AppCompatActivity() {
     private suspend fun getJson(url: String): String {
         val res = withContext(Dispatchers.IO) {
             var result = ""
-            val url = URL(url)
-            val con = url.openConnection() as? HttpURLConnection
+            val con = URL(url).openConnection() as? HttpURLConnection
             con?.let {
                 try {
                     it.connectTimeout = 10000
@@ -107,6 +109,15 @@ class MainActivity : AppCompatActivity() {
     private fun getVersionPost(result: String) {
         val newVersion = JSONObject(result).getString("version")
         if (oldVersion != newVersion) {
+
+            _helper = DatabaseHelper(this)
+            val db = _helper.writableDatabase
+            val delete = """
+                DELETE FROM quiz;
+            """.trimIndent()
+            val stmt = db.compileStatement(delete)
+            stmt.executeUpdateDelete()
+
             val pref = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this)
             pref.edit().putString("version", newVersion).apply()
             getData(QUIZ_URL + DATA)
@@ -130,6 +141,8 @@ class MainActivity : AppCompatActivity() {
             """.trimIndent()
 
         val stmt = db.compileStatement(insert)
+
+
         for (i in 0 until num) {
             val id = rootData.getJSONObject(i).getLong("id")
             val question = rootData.getJSONObject(i).getString("question")
@@ -141,7 +154,6 @@ class MainActivity : AppCompatActivity() {
             val q4 = choices[3].toString()
             val q5 = choices[4].toString()
             val q6 = choices[5].toString()
-
 
 
             stmt.run {
@@ -157,6 +169,13 @@ class MainActivity : AppCompatActivity() {
 
             }
             stmt.executeInsert()
+
         }
+    }
+
+
+    fun next() {
+        val intent = Intent(this, QuizView::class.java)
+        startActivity(intent)
     }
 }

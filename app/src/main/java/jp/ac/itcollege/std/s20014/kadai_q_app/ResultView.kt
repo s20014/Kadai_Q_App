@@ -19,7 +19,7 @@ class ResultView : AppCompatActivity() {
         val min = time / 1000L / 60
         val sec = time / 1000L % 60000
 
-        binding.scoreView.text = "10/${score}点"
+        binding.scoreView.text = "10問中${score}点"
         if (min == 0L) {
             binding.timeView.text = "${sec}秒"
         }else {

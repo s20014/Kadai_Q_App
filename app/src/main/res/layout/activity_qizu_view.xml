@@ -41,6 +41,7 @@
                 android:id="@+id/idView"
                 android:layout_width="369dp"
                 android:layout_height="30dp"
+                android:layout_marginStart="10dp"
                 android:textAlignment="viewStart"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -48,8 +49,8 @@
 
             <TextView
                 android:id="@+id/questionView"
-                android:layout_width="match_parent"
-                android:layout_height="185dp"
+                android:layout_width="367dp"
+                android:layout_height="178dp"
                 android:layout_marginStart="5dp"
                 android:layout_marginEnd="5dp"
                 android:background="@drawable/frame_style"
